@@ -49,7 +49,10 @@ app.post('/api/analyze', upload.single('video'), async (req, res) => {
             const response = await axios.post(PYTHON_API_URL, form, {
                 headers: {
                     ...form.getHeaders()
-                }
+                },
+                maxContentLength: Infinity,
+                maxBodyLength: Infinity,
+                timeout: 120000 // 2 minutes timeout for heavy AI processing
             });
 
             // Clean up the uploaded file after sending to Python service

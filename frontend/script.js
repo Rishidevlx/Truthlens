@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(error => {
                 console.error('Error:', error);
                 clearInterval(interval);
-                alert('Failed to connect to backend! Ensure the Node server is running on port 5000.');
+                alert('Backend Communication Error! Please check your Render logs for details. (Status: 502)');
                 resetBtn.click();
             });
     }
