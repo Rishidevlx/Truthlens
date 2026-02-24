@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData();
         formData.append('video', file);
 
-        fetch('http://localhost:5000/api/analyze', {
+        fetch('https://truthlens-backend.onrender.com/api/analyze', {
             method: 'POST',
             body: formData
         })
