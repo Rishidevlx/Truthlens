@@ -1,0 +1,8 @@
+# Node
+backend/node_modules/
+backend/uploads/
+
+# Python
+python_service/venv/
+python_service/uploads/
+__pycache__/

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruthLens | AI Video Authenticity Detector</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="background-effects">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+    </div>
+
+    <header>
+        <div class="logo">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>TruthLens</span>
+        </div>
+        <nav>
+            <a href="#">About</a>
+            <a href="#">How it Works</a>
+            <a href="https://github.com" target="_blank" class="github-link"><i class="fa-brands fa-github"></i></a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>AI Video Authenticity <span>Detector</span></h1>
+            <p>Upload a video to instantly detect deepfakes and manipulated content using our advanced AI forensic engine.</p>
+        </section>
+
+        <section class="analysis-container glass-panel">
+            <!-- Upload State -->
+            <div id="upload-state" class="state-view active">
+                <div class="upload-zone" id="drop-zone">
+                    <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+                    <h3>Drag & Drop video here</h3>
+                    <p>or</p>
+                    <label for="video-upload" class="upload-btn">Browse Files</label>
+                    <input type="file" id="video-upload" accept="video/mp4,video/x-m4v,video/*" hidden>
+                    <p class="file-info">Supported formats: MP4, AVI, MOV (Max 50MB)</p>
+                </div>
+            </div>
+
+            <!-- Processing State -->
+            <div id="processing-state" class="state-view">
+                <div class="scanner-container">
+                    <div class="video-preview-placeholder">
+                        <i class="fa-solid fa-film"></i>
+                    </div>
+                    <div class="scanner-line"></div>
+                </div>
+                <div class="processing-info">
+                    <h3>Analyzing Temporal & Spatial Artifacts</h3>
+                    <p>Our EfficientNet model is processing frames...</p>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="progress-bar"></div>
+                    </div>
+                    <p class="progress-text" id="progress-text">0%</p>
+                </div>
+            </div>
+
+            <!-- Result State -->
+            <div id="result-state" class="state-view">
+                <div class="result-header">
+                    <h2>Analysis Complete</h2>
+                    <button class="reset-btn" id="reset-btn"><i class="fa-solid fa-rotate-right"></i> Analyze Another</button>
+                </div>
+                
+                <div class="result-card" id="result-card">
+                    <div class="score-ring-container">
+                        <svg class="score-ring" viewBox="0 0 100 100">
+                            <circle class="ring-track" cx="50" cy="50" r="40"></circle>
+                            <circle class="ring-progress" id="ring-progress" cx="50" cy="50" r="40"></circle>
+                        </svg>
+                        <div class="score-text">
+                            <span id="score-value">0</span>%
+                        </div>
+                    </div>
+                    
+                    <div class="verdict-container">
+                        <h3 id="verdict-title">Authentic Video</h3>
+                        <p id="verdict-desc">No significant manipulation or AI generation artifacts detected.</p>
+                    </div>
+                </div>
+                
+                <div class="details-metrics">
+                    <div class="metric">
+                        <span class="metric-label">Model Engine</span>
+                        <span class="metric-value">EfficientNet-B0</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Frames Analyzed</span>
+                        <span class="metric-value" id="frames-value">32</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Processing Time</span>
+                        <span class="metric-value" id="time-value">4.2s</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
