@@ -38,48 +38,65 @@ app.post('/api/analyze', upload.single('video'), async (req, res) => {
             return res.status(400).json({ error: 'No video file provided' });
         }
 
-        console.log(`[${new Date().toISOString()}] Received video file for analysis: ${req.file.originalname}`);
+        const stats = fs.statSync(req.file.path);
+        const fileSizeInMB = stats.size / (1024 * 1024);
+        console.log(`[${new Date().toISOString()}] Received video: ${req.file.originalname} (${fileSizeInMB.toFixed(2)} MB)`);
 
-        // --- REAL IMPLEMENTATION (Calls Python service) ---
-        const form = new FormData();
-        form.append('video', fs.createReadStream(req.file.path), req.file.originalname);
+        // Use Buffer instead of Stream to avoid "stream aborted" errors during spin-ups
+        const fileBuffer = fs.readFileSync(req.file.path);
 
-        try {
-            console.log(`[${new Date().toISOString()}] Forwarding video to Python AI Service...`);
-            const response = await axios.post(PYTHON_API_URL, form, {
-                headers: {
-                    ...form.getHeaders()
-                },
-                maxContentLength: Infinity,
-                maxBodyLength: Infinity,
-                timeout: 120000 // 2 minutes timeout for heavy AI processing
-            });
+        // --- ROBUST RETRY LOGIC FOR RENDER FREE TIER SPIN-UP ---
+        let response;
+        let attempts = 0;
+        const maxAttempts = 5; // Increased to 5 attempts
 
-            // Clean up the uploaded file after sending to Python service
-            fs.unlinkSync(req.file.path);
-            res.json(response.data);
-            console.log(`[${new Date().toISOString()}] Successfully received analysis from Python service.`);
-
-        } catch (apiError) {
-            console.error('Error communicating with Python API:', apiError.message);
-            // Clean up the file
-            fs.unlinkSync(req.file.path);
-            return res.status(502).json({ error: 'Failed to communicate with AI Service' });
-        }
-
-    } catch (error) {
-        console.error('Error analyzing video:', error);
-
-        // Cleanup file if an error occurs
-        if (req.file && req.file.path) {
+        while (attempts < maxAttempts) {
             try {
-                fs.unlinkSync(req.file.path);
-            } catch (cleanupError) {
-                console.error('Failed to cleanup file:', cleanupError);
+                attempts++;
+                console.log(`[${new Date().toISOString()}] Forwarding to AI Service (Attempt ${attempts}/${maxAttempts})...`);
+
+                const form = new FormData();
+                form.append('video', fileBuffer, req.file.originalname);
+
+                response = await axios.post(PYTHON_API_URL, form, {
+                    headers: { ...form.getHeaders() },
+                    maxContentLength: Infinity,
+                    maxBodyLength: Infinity,
+                    timeout: 240000 // 4 minutes per attempt
+                });
+
+                break; // Success!
+            } catch (apiError) {
+                console.error(`[${new Date().toISOString()}] Attempt ${attempts} failed: ${apiError.message}`);
+
+                if (attempts < maxAttempts) {
+                    // Optimized wait time for Render: 15s, 20s, 25s, 30s... total wait ~90s
+                    const waitTime = (attempts + 2) * 5000;
+                    console.log(`Waiting ${waitTime / 1000}s before retry for Python service to wake up...`);
+                    await new Promise(resolve => setTimeout(resolve, waitTime));
+                } else {
+                    throw apiError; // All attempts failed
+                }
             }
         }
 
-        res.status(500).json({ error: 'Internal server error during analysis' });
+        // Clean up the uploaded file
+        fs.unlinkSync(req.file.path);
+        console.log(`[${new Date().toISOString()}] Analysis Success from Python service.`);
+        res.json(response.data);
+
+    } catch (error) {
+        console.error(`[${new Date().toISOString()}] Final Analysis Failure:`, error.message);
+
+        if (req.file && req.file.path) {
+            try { fs.unlinkSync(req.file.path); } catch (e) { }
+        }
+
+        res.status(502).json({
+            error: 'AI Service Communication Failed',
+            details: error.message,
+            reason: 'Python service may be spinning up. Please try again in 1 minute.'
+        });
     }
 });
 

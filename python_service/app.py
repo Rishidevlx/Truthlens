@@ -70,6 +70,9 @@ def health_check():
 
 @app.route('/analyze', methods=['POST'])
 def analyze_video():
+    content_length = request.content_length or 0
+    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Received /analyze request. Payload size: {content_length / (1024*1024):.2f} MB")
+    
     # Check if a file was uploaded
     if 'video' not in request.files:
         return jsonify({"error": "No video file provided in the request"}), 400
