@@ -19,9 +19,9 @@ In an era where synthetic media (Deepfakes) can be generated in seconds, **Truth
 
 ---
 
-## 🏗️ 3D Architectural Blueprint
+## 🏗️ Production Architecture
 
-TruthLens is not a monolith; it is built on a highly scalable **3-Tier Microservice Architecture**. 
+TruthLens is deployed on a highly scalable **3-Tier Microservice Architecture** using industry-standard cloud platforms.
 
 ```mermaid
 graph TD
@@ -29,15 +29,36 @@ graph TD
     classDef backend fill:#1e1e24,stroke:#10b981,stroke-width:2px,color:#fff;
     classDef ai fill:#1e1e24,stroke:#f59e0b,stroke-width:2px,color:#fff;
     
-    A[🧑‍💻 User Browser <br> UI: HTML/CSS/JS]:::frontend
-    B[⚙️ Node.js API Gateway <br> Port 5000]:::backend
-    C[🧠 Python AI Engine <br> Port 5001]:::ai
+    A[🧑‍💻 User Browser <br> Vercel Deployment]:::frontend
+    B[⚙️ Express API Gateway <br> Render Web Service]:::backend
+    C[🧠 Python AI Engine <br> Render AI Service]:::ai
     
-    A -- "1. Uploads Video File (FormData)" --> B
-    B -- "2. Forwards Video via Axios" --> C
-    C -- "3. Runs ML Analysis & Returns JSON" --> B
-    B -- "4. Sends JSON Score to UI" --> A
+    A -- "1. Secure POST Request" --> B
+    B -- "2. Multi-Attempt Retry (90s)" --> C
+    C -- "3. ML Inference Results" --> B
+    B -- "4. JSON Payload" --> A
 ```
+
+---
+
+## 🚀 Live Deployment Details
+
+The application is fully containerized and hosted across the following endpoints:
+
+| Layer | Environment | Technology | URL |
+|-------|-------------|------------|-----|
+| **Frontend** | Vercel | Vanilla JS / CSS3 | `https://truthlens-eight-peach.vercel.app` |
+| **Backend** | Render | Node.js / Express | `https://truthlens-backend-66g0.onrender.com` |
+| **AI Core** | Render | Python / Flask | `https://truthlens-ai-heg7.onrender.com` |
+
+---
+
+## 🛰️ Resiliency Features (New)
+
+To handle modern cloud limitations (specifically Free Tier spin-downs), we've implemented:
+*   **90-Second Wake-up Resilience**: Optimized retry logic in the Node backend that performs 5 attempts with increasing wait intervals to handle Render's 50-second cold start delay.
+*   **Buffer-based Transmission**: Switched from streaming to buffer payloads to ensure data integrity during initial connection handshakes.
+*   **Extended Timeouts**: Set 4-minute thresholds to allow for deep learning inference on allocated cloud CPU resources.
 
 ---
 
@@ -57,7 +78,7 @@ When the extracted face crops are fed into EfficientNet, it breaks down the imag
 
 ---
 
-## � Complete Library & Technology Breakdown
+##  Complete Library & Technology Breakdown
 
 Every library in this architecture was explicitly chosen for speed, scalability, and security.
 
@@ -88,11 +109,11 @@ The user drags `fake_vid.mp4` onto the `drop-zone` `div` in the browser.
 **B. Sandbox Validation (Frontend JS)**
 `script.js` instantly checks the MIME type (`file.type.match('video.*')`) and size (`< 50MB`). If it passes, it is appended to a `FormData` object.
 **C. Network Transit 1 (Frontend to Backend)**
-The browser performs a Javascript `fetch()` POST request to `localhost:5000/api/analyze`.
+The browser performs a Javascript `fetch()` POST request to the **Render Backend URL**.
 **D. Interception (Backend Node.js)**
  The Express backend receives the hit. The `multer` middleware steps in automatically, grabs the raw binary data packet, reconstructs the MP4 file, and writes it to `backend/uploads/fake_vid.mp4`.
 **E. Network Transit 2 (Backend to AI Service)**
-The Node `server.js` script wakes up. It reads the local file using `fs.createReadStream`, wraps it in a *new* FormData packet, and fires it via Axios to `localhost:5001/analyze`.
+The Node `server.js` script wakes up. It reads the local file, wraps it in a *new* FormData packet, and fires it via Axios to the **Render AI Service URL** (with 5-attempt retry logic).
 **F. Deep AI Verification (Python Flask)**
 Flask accepts the file. The `simulate_efficientnet_analysis` function triggers:
   - Phase 1: Frame Extraction logic fires.
@@ -107,19 +128,18 @@ Node.js receives the JSON. It deletes its own temporary video copy, and passes t
 
 ---
 
-## � How To Fire Up The Engines
+## ⚙️ How To Fire Up The Engines (Dev Mode)
 
-Starting this beast requires two terminals to run the microservices in parallel.
+Starting this project locally requires two terminals to run the microservices in parallel.
 
 ### 1️⃣ Ignite the AI Core (Terminal 1)
 ```powershell
 cd "python_service"
-# Activate the python virtual environment
+# Activate virtual environment
 .\venv\Scripts\Activate
 # Start the Flask microservice
 python app.py
 ```
-*(Runs completely isolated on Port 5001)*
 
 ### 2️⃣ Ignite the API Gateway (Terminal 2)
 ```powershell
@@ -127,10 +147,9 @@ cd "backend"
 # Start the Express server
 node server.js
 ```
-*(Runs completely isolated on Port 5000)*
 
 ### 3️⃣ Launch the Interface
-Simply double-click `frontend/index.html` in your File Explorer to open the application in any modern web browser. Drop a video in, and watch the matrix work. 
+Simply open `frontend/index.html` in your browser.
 
 ---
 <div align="center">
